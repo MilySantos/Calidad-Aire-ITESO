@@ -1,0 +1,2565 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Monitoreo de Calidad del Aire</title>
+
+
+    <!-- Biblioteca Chart.js -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <style>
+
+        /* =====================================================
+           CONFIGURACIÓN GENERAL
+           ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background-color: #f5f7fa;
+
+            margin: 0;
+
+            padding: 30px;
+
+            color: #17324d;
+
+        }
+
+
+        /* =====================================================
+           ENCABEZADO
+           ===================================================== */
+
+        .encabezado {
+
+            position: relative;
+
+            min-height: 135px;
+
+            padding-left: 150px;
+
+            margin-bottom: 25px;
+
+        }
+
+
+        .logo {
+
+            position: absolute;
+
+            top: 0;
+
+            left: 0;
+
+            margin: 0;
+
+            padding: 0;
+
+        }
+
+
+        .logo img {
+
+            display: block;
+
+            width: 128px;
+
+            height: auto;
+
+            max-width: 128px;
+
+            object-fit: contain;
+
+        }
+
+        /* Logo Smability - esquina superior derecha */
+
+        .logo-smability {
+            position:absolute;
+            top: 10px;
+            right: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .logo-smability img {
+            display: block;
+            width: 175px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .titulo-dashboard {
+
+            padding-top: 18px;
+
+        }
+
+
+        .titulo-dashboard h1 {
+
+            margin: 0;
+
+            color: #17324d;
+
+            font-size: 32px;
+
+        }
+
+
+        .titulo-dashboard h2 {
+
+            margin: 7px 0 0 0;
+
+            color: #617283;
+
+            font-size: 22px;
+
+            font-weight: normal;
+
+        }
+
+
+        .estado-conexion {
+
+            display: flex;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-top: 14px;
+
+            color: #617283;
+
+            font-size: 13px;
+
+        }
+
+
+        .conexion-punto {
+
+            display: inline-block;
+
+            width: 10px;
+
+            height: 10px;
+
+            border-radius: 50%;
+
+            background-color: #9ca3af;
+
+        }
+
+
+        .conexion-punto.conectado {
+
+            background-color: #16a34a;
+
+        }
+
+
+        .conexion-punto.error {
+
+            background-color: #dc2626;
+
+        }
+
+
+        /* =====================================================
+           MENSAJE DE ERROR
+           ===================================================== */
+
+        .mensaje-error {
+
+            display: none;
+
+            background-color: #fee2e2;
+
+            color: #991b1b;
+
+            border: 1px solid #fecaca;
+
+            border-radius: 10px;
+
+            padding: 15px;
+
+            margin-bottom: 20px;
+
+            line-height: 1.5;
+
+        }
+
+
+        /* =====================================================
+           TARJETAS
+           ===================================================== */
+
+        .indicadores {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(180px, 1fr)
+                );
+
+            gap: 20px;
+
+            margin-top: 20px;
+
+        }
+
+
+        .tarjeta {
+
+            background-color: white;
+
+            min-height: 145px;
+
+            padding: 22px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.10);
+
+        }
+
+
+        .tarjeta h3 {
+
+            margin-top: 0;
+
+            margin-bottom: 12px;
+
+            color: #617283;
+
+            font-size: 16px;
+
+        }
+
+
+        .tarjeta strong {
+
+            display: block;
+
+            color: #17324d;
+
+            font-size: 28px;
+
+        }
+
+
+        /* =====================================================
+           TARJETA AQI
+           ===================================================== */
+
+        .tarjeta-aqi {
+
+            transition:
+                background-color 0.3s ease,
+                color 0.3s ease;
+
+        }
+
+
+        .tarjeta-aqi h3,
+        .tarjeta-aqi strong,
+        .tarjeta-aqi p,
+        .tarjeta-aqi span {
+
+            color: inherit;
+
+        }
+
+
+        .estado-aqi {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            margin-top: 12px;
+
+            font-weight: bold;
+
+        }
+
+
+        .semaforo {
+
+            display: inline-block;
+
+            width: 17px;
+
+            height: 17px;
+
+            border-radius: 50%;
+
+            background-color: white;
+
+            border:
+                2px solid rgba(0, 0, 0, 0.25);
+
+            flex-shrink: 0;
+
+        }
+
+
+        #riesgoAQI {
+
+            margin: 8px 0 0 0;
+
+            font-size: 13px;
+
+            line-height: 1.4;
+
+        }
+
+
+        /* =====================================================
+           LEYENDA DEL SEMÁFORO
+           ===================================================== */
+
+        .leyenda-aire {
+
+            background-color: white;
+
+            padding: 20px;
+
+            margin-top: 25px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.10);
+
+        }
+
+
+        .leyenda-aire h3 {
+
+            margin-top: 0;
+
+            margin-bottom: 18px;
+
+            color: #17324d;
+
+        }
+
+
+        .escala-riesgo {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 15px 25px;
+
+        }
+
+
+        .nivel-riesgo {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            font-size: 14px;
+
+        }
+
+
+        .circulo {
+
+            display: inline-block;
+
+            width: 19px;
+
+            height: 19px;
+
+            border-radius: 50%;
+
+            border:
+                1px solid rgba(0, 0, 0, 0.25);
+
+            flex-shrink: 0;
+
+        }
+
+
+        .verde {
+
+            background-color:
+                rgb(0, 228, 0);
+
+        }
+
+
+        .amarillo {
+
+            background-color:
+                rgb(255, 255, 0);
+
+        }
+
+
+        .naranja {
+
+            background-color:
+                rgb(255, 126, 0);
+
+        }
+
+
+        .rojo {
+
+            background-color:
+                rgb(255, 0, 0);
+
+        }
+
+
+        .morado {
+
+            background-color:
+                rgb(143, 63, 151);
+
+        }
+
+
+        .nota-normativa {
+
+            margin-top: 16px;
+
+            margin-bottom: 0;
+
+            color: #617283;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+
+        }
+
+
+        /* =====================================================
+           GRÁFICAS
+           ===================================================== */
+
+        .titulo-grafica {
+
+            margin-top: 40px;
+
+            margin-bottom: 0;
+
+            color: #17324d;
+
+            font-size: 24px;
+
+        }
+
+
+        .grafica-container {
+
+            position: relative;
+
+            width: 100%;
+
+            height: 420px;
+
+            background-color: white;
+
+            padding: 25px;
+
+            margin-top: 15px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.10);
+
+        }
+
+
+        /* =====================================================
+           DISEÑO RESPONSIVE
+           ===================================================== */
+
+        @media (max-width: 700px) {
+
+            body {
+
+                padding: 18px;
+
+            }
+
+
+            .encabezado {
+
+                min-height: 110px;
+
+                padding-left: 100px;
+
+            }
+
+
+            .logo img {
+
+                width: 85px;
+
+                max-width: 85px;
+
+            }
+
+
+            .titulo-dashboard {
+
+                padding-top: 3px;
+
+            }
+
+
+            .titulo-dashboard h1 {
+
+                font-size: 24px;
+
+            }
+
+
+            .titulo-dashboard h2 {
+
+                font-size: 17px;
+
+            }
+
+
+            .estado-conexion {
+
+                font-size: 11px;
+
+            }
+
+
+            .indicadores {
+
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(0, 1fr)
+                    );
+
+                gap: 14px;
+
+            }
+
+
+            .tarjeta {
+
+                min-height: 135px;
+
+                padding: 17px;
+
+            }
+
+
+            .tarjeta strong {
+
+                font-size: 22px;
+
+            }
+
+
+            .tarjeta h3 {
+
+                font-size: 14px;
+
+            }
+
+
+            .escala-riesgo {
+
+                flex-direction: column;
+
+                gap: 10px;
+
+            }
+
+
+            .titulo-grafica {
+
+                font-size: 21px;
+
+            }
+
+
+            .grafica-container {
+
+                height: 370px;
+
+                padding: 15px;
+
+            }
+
+        }
+
+
+        @media (max-width: 430px) {
+
+            .indicadores {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .encabezado {
+
+                padding-left: 85px;
+
+            }
+
+
+            .logo img {
+
+                width: 70px;
+
+                max-width: 70px;
+
+            }
+
+
+            .titulo-dashboard h1 {
+
+                font-size: 21px;
+
+            }
+
+
+            .titulo-dashboard h2 {
+
+                font-size: 15px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         ENCABEZADO
+         ===================================================== -->
+
+    <header class="encabezado">
+
+
+    <div class="logo">
+        <img
+            src="Logo IATS_RRSS.png"
+            alt="Logo ITESO"
+        >
+    </div>
+
+    <div class="logo-smability">
+        <img
+            src="smability.png"
+            alt="Logo Smability"
+        >
+    </div>
+
+
+    <div class="titulo-dashboard">
+
+        </div>
+
+
+        <div class="titulo-dashboard">
+
+            <h1>
+                Monitoreo de Calidad del Aire
+            </h1>
+
+            <h2>
+                Estación ITESO
+            </h2>
+
+
+            <div class="estado-conexion">
+
+                <span
+                    class="conexion-punto"
+                    id="conexionPunto"
+                ></span>
+
+                <span id="estadoConexion">
+                    Conectando con la estación...
+                </span>
+
+                <span id="ultimaActualizacion"></span>
+
+            </div>
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- =====================================================
+         MENSAJE DE ERROR
+         ===================================================== -->
+
+    <div
+        class="mensaje-error"
+        id="mensajeError"
+    ></div>
+
+
+
+    <!-- =====================================================
+         TARJETAS
+         ===================================================== -->
+
+    <main>
+
+
+        <section class="indicadores">
+
+
+            <!-- Índice de calidad del aire -->
+
+            <article
+                class="tarjeta tarjeta-aqi"
+                id="tarjetaAQI"
+            >
+
+                <h3>
+                    Índice AIRE Y SALUD
+                </h3>
+
+                <strong id="aqi">
+                    --
+                </strong>
+
+
+                <div class="estado-aqi">
+
+                    <span
+                        class="semaforo"
+                        id="semaforoAQI"
+                    ></span>
+
+                    <span id="categoriaAQI">
+                        Sin información
+                    </span>
+
+                </div>
+
+
+                <p id="riesgoAQI">
+                    Riesgo no determinado
+                </p>
+
+            </article>
+
+
+
+            <!-- PM2.5 -->
+
+            <article class="tarjeta">
+
+                <h3>
+                    PM2.5
+                </h3>
+
+                <strong id="pm25">
+                    --
+                </strong>
+
+            </article>
+
+
+
+            <!-- PM10 -->
+
+            <article class="tarjeta">
+
+                <h3>
+                    PM10
+                </h3>
+
+                <strong id="pm10">
+                    --
+                </strong>
+
+            </article>
+
+
+
+            <!-- Ozono -->
+
+            <article class="tarjeta">
+
+                <h3>
+                    O₃
+                </h3>
+
+                <strong id="o3">
+                    --
+                </strong>
+
+            </article>
+
+
+
+            <!-- Temperatura -->
+
+            <article class="tarjeta">
+
+                <h3>
+                    Temperatura
+                </h3>
+
+                <strong id="temperatura">
+                    --
+                </strong>
+
+            </article>
+
+
+
+            <!-- Humedad -->
+
+            <article class="tarjeta">
+
+                <h3>
+                    Humedad
+                </h3>
+
+                <strong id="humedad">
+                    --
+                </strong>
+
+            </article>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             SEMÁFORO DE RIESGO
+             ================================================= -->
+
+        <section class="leyenda-aire">
+
+
+            <h3>
+                Calidad del aire y riesgo a la salud
+            </h3>
+
+
+            <div class="escala-riesgo">
+
+
+                <div class="nivel-riesgo">
+
+                    <span
+                        class="circulo verde"
+                    ></span>
+
+                    <span>
+                        Buena · Riesgo bajo
+                    </span>
+
+                </div>
+
+
+
+                <div class="nivel-riesgo">
+
+                    <span
+                        class="circulo amarillo"
+                    ></span>
+
+                    <span>
+                        Aceptable · Riesgo moderado
+                    </span>
+
+                </div>
+
+
+
+                <div class="nivel-riesgo">
+
+                    <span
+                        class="circulo naranja"
+                    ></span>
+
+                    <span>
+                        Mala · Riesgo alto
+                    </span>
+
+                </div>
+
+
+
+                <div class="nivel-riesgo">
+
+                    <span
+                        class="circulo rojo"
+                    ></span>
+
+                    <span>
+                        Muy mala · Riesgo muy alto
+                    </span>
+
+                </div>
+
+
+
+                <div class="nivel-riesgo">
+
+                    <span
+                        class="circulo morado"
+                    ></span>
+
+                    <span>
+                        Extremadamente mala ·
+                        Riesgo extremadamente alto
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+            <p class="nota-normativa">
+
+                Colores y categorías de referencia:
+                NOM-172-SEMARNAT-2023.
+
+                La clasificación mostrada utiliza los índices
+                específicos entregados por la API.
+
+            </p>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             GRÁFICA DE PARTÍCULAS
+             ================================================= -->
+
+        <h2 class="titulo-grafica">
+
+            Evolución temporal de PM2.5 y PM10
+
+        </h2>
+
+
+        <section class="grafica-container">
+
+            <canvas id="graficaParticulas"></canvas>
+
+        </section>
+
+
+
+        <!-- =================================================
+             GRÁFICA DE OZONO
+             ================================================= -->
+
+        <h2 class="titulo-grafica">
+
+            Evolución temporal de O₃
+
+        </h2>
+
+
+        <section class="grafica-container">
+
+            <canvas id="graficaO3"></canvas>
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+         ===================================================== -->
+
+    <script>
+
+        "use strict";
+
+
+        /* ==================================================
+           CONFIGURACIÓN
+           ================================================== */
+
+        const API_URL =
+            "https://jciiy1ok97.execute-api.us-east-1.amazonaws.com/default/getData";
+
+
+        const DEVICE_ID =
+            "SMAA_003";
+
+
+        const DIAS_HISTORICO =
+            1;
+
+
+        /*
+        La API entrega información horaria.
+
+        La página vuelve a consultar la API cada
+        cinco minutos para detectar nuevos registros.
+        */
+
+        const INTERVALO_ACTUALIZACION =
+            1 * 60 * 1000;
+
+
+        let graficaParticulas =
+            null;
+
+
+        let graficaO3 =
+            null;
+
+
+
+        /* ==================================================
+           ELEMENTOS DE ESTADO
+           ================================================== */
+
+        function actualizarEstadoConexion(
+            estado,
+            mensaje
+        ) {
+
+            const punto =
+                document.getElementById(
+                    "conexionPunto"
+                );
+
+
+            const texto =
+                document.getElementById(
+                    "estadoConexion"
+                );
+
+
+            punto.classList.remove(
+                "conectado",
+                "error"
+            );
+
+
+            if (estado === "conectado") {
+
+                punto.classList.add(
+                    "conectado"
+                );
+
+            }
+
+
+            if (estado === "error") {
+
+                punto.classList.add(
+                    "error"
+                );
+
+            }
+
+
+            texto.textContent =
+                mensaje;
+
+        }
+
+
+
+        function mostrarError(mensaje) {
+
+            const elemento =
+                document.getElementById(
+                    "mensajeError"
+                );
+
+
+            elemento.textContent =
+                mensaje;
+
+
+            elemento.style.display =
+                "block";
+
+        }
+
+
+
+        function ocultarError() {
+
+    const elemento =
+        document.getElementById(
+            "mensajeError"
+        );
+
+    elemento.textContent =
+        "";
+
+    elemento.style.display =
+        "none";
+
+}
+
+
+        /* ==================================================
+           CONSULTAR API
+           ================================================== */
+
+        async function obtenerDatos() {
+
+            actualizarEstadoConexion(
+                "consultando",
+                "Consultando la estación..."
+            );
+
+
+            const parametros =
+                new URLSearchParams({
+
+                    action:
+                        "hourly_history",
+
+                    deviceID:
+                        DEVICE_ID,
+
+                    days:
+                        String(
+                            DIAS_HISTORICO
+                        )
+
+                });
+
+
+            const url =
+                `${API_URL}?${parametros.toString()}`;
+
+
+            console.log(
+                "Consultando API:",
+                url
+            );
+
+
+            const respuesta =
+                await fetch(
+                    url,
+                    {
+                        method:
+                            "GET",
+
+                        cache:
+                            "no-store"
+                    }
+                );
+
+
+            if (!respuesta.ok) {
+
+                throw new Error(
+                    `La API respondió con el código HTTP ${respuesta.status}.`
+                );
+
+            }
+
+
+            const json =
+                await respuesta.json();
+
+
+            console.log(
+                "Respuesta completa de la API:",
+                json
+            );
+
+
+            if (
+                !json
+                ||
+                !Array.isArray(
+                    json.data
+                )
+            ) {
+
+                throw new Error(
+                    "La respuesta no contiene un arreglo llamado data."
+                );
+
+            }
+
+
+            if (
+                json.data.length === 0
+            ) {
+
+                throw new Error(
+                    "La API devolvió el arreglo data vacío."
+                );
+
+            }
+
+
+            return json.data;
+
+        }
+
+
+
+        /* ==================================================
+           FUNCIONES AUXILIARES
+           ================================================== */
+
+        function convertirFecha(
+            timestamp
+        ) {
+
+            const valor =
+                Number(
+                    timestamp
+                );
+
+
+            if (
+                !Number.isFinite(
+                    valor
+                )
+            ) {
+
+                return "Fecha no disponible";
+
+            }
+
+
+            const fecha =
+                new Date(
+                    valor * 1000
+                );
+
+
+            return fecha.toLocaleString(
+                "es-MX",
+                {
+
+                    timeZone:
+                        "America/Mexico_City",
+
+                    day:
+                        "2-digit",
+
+                    month:
+                        "2-digit",
+
+                    hour:
+                        "2-digit",
+
+                    minute:
+                        "2-digit"
+
+                }
+            );
+
+        }
+
+
+
+        function formatearNumero(
+            valor,
+            decimales
+        ) {
+
+            const numero =
+                Number(
+                    valor
+                );
+
+
+            if (
+                !Number.isFinite(
+                    numero
+                )
+            ) {
+
+                return null;
+
+            }
+
+
+            return numero.toFixed(
+                decimales
+            );
+
+        }
+
+
+
+        /*
+        SUPUESTO PROVISIONAL:
+
+        o3_avg está expresado en ppb.
+
+        Conversión:
+
+        ppm = ppb / 1000
+
+        Si la documentación de la API confirma
+        que o3_avg ya está en ppm, cambia:
+
+        return numero / 1000;
+
+        por:
+
+        return numero;
+        */
+
+        function convertirO3APpm(
+            valor
+        ) {
+
+            const numero =
+                Number(
+                    valor
+                );
+
+
+            if (
+                !Number.isFinite(
+                    numero
+                )
+            ) {
+
+                return null;
+
+            }
+
+
+            return numero / 1000;
+
+        }
+
+
+
+        /* ==================================================
+           CLASIFICACIÓN DE CALIDAD DEL AIRE
+           ================================================== */
+
+        function clasificarAireSalud(
+            registro
+        ) {
+
+            /*
+            Se toman los índices específicos
+            calculados por la API.
+            */
+
+            const indices =
+                [
+
+                    registro.aqi_pm25,
+
+                    registro.aqi_pm10,
+
+                    registro.aqi_o3,
+
+                    registro.aqi_no2,
+
+                    registro.aqi_co
+
+                ]
+
+                .map(
+                    valor =>
+                        Number(
+                            valor
+                        )
+                )
+
+                .filter(
+                    valor =>
+                        Number.isFinite(
+                            valor
+                        )
+                );
+
+
+            /*
+            Como respaldo se utiliza el AQI general.
+            */
+
+            let indice =
+                Number(
+                    registro.aqi
+                );
+
+
+            /*
+            Se selecciona el contaminante con
+            el índice más desfavorable.
+            */
+
+            if (
+                indices.length > 0
+            ) {
+
+                indice =
+                    Math.max(
+                        ...indices
+                    );
+
+            }
+
+
+            if (
+                !Number.isFinite(
+                    indice
+                )
+            ) {
+
+                return {
+
+                    categoria:
+                        "Sin información",
+
+                    riesgo:
+                        "Riesgo no determinado",
+
+                    descripcion:
+                        "No hay un índice válido disponible.",
+
+                    color:
+                        "#ffffff",
+
+                    colorTexto:
+                        "#17324d"
+
+                };
+
+            }
+
+
+            if (
+                indice <= 50
+            ) {
+
+                return {
+
+                    categoria:
+                        "Buena",
+
+                    riesgo:
+                        "Riesgo bajo",
+
+                    descripcion:
+                        "El riesgo para la salud es mínimo o nulo.",
+
+                    color:
+                        "rgb(0, 228, 0)",
+
+                    colorTexto:
+                        "#102a13"
+
+                };
+
+            }
+
+
+            if (
+                indice <= 100
+            ) {
+
+                return {
+
+                    categoria:
+                        "Aceptable",
+
+                    riesgo:
+                        "Riesgo moderado",
+
+                    descripcion:
+                        "El riesgo para la población general es mínimo; las personas sensibles pueden presentar molestias.",
+
+                    color:
+                        "rgb(255, 255, 0)",
+
+                    colorTexto:
+                        "#3a3300"
+
+                };
+
+            }
+
+
+            if (
+                indice <= 150
+            ) {
+
+                return {
+
+                    categoria:
+                        "Mala",
+
+                    riesgo:
+                        "Riesgo alto",
+
+                    descripcion:
+                        "Existe mayor riesgo de efectos a la salud, especialmente para la población sensible.",
+
+                    color:
+                        "rgb(255, 126, 0)",
+
+                    colorTexto:
+                        "#241100"
+
+                };
+
+            }
+
+
+            if (
+                indice <= 200
+            ) {
+
+                return {
+
+                    categoria:
+                        "Muy mala",
+
+                    riesgo:
+                        "Riesgo muy alto",
+
+                    descripcion:
+                        "Pueden presentarse daños a la salud y agravamiento de enfermedades preexistentes.",
+
+                    color:
+                        "rgb(255, 0, 0)",
+
+                    colorTexto:
+                        "#ffffff"
+
+                };
+
+            }
+
+
+            return {
+
+                categoria:
+                    "Extremadamente mala",
+
+                riesgo:
+                    "Riesgo extremadamente alto",
+
+                descripcion:
+                    "Es más probable que cualquier persona pueda presentar efectos graves a la salud.",
+
+                color:
+                    "rgb(143, 63, 151)",
+
+                colorTexto:
+                    "#ffffff"
+
+            };
+
+        }
+
+
+
+        /* ==================================================
+           ACTUALIZAR TARJETA AQI
+           ================================================== */
+
+        function actualizarTarjetaAQI(
+            ultimo
+        ) {
+
+            const clasificacion =
+                clasificarAireSalud(
+                    ultimo
+                );
+
+
+            const tarjeta =
+                document.getElementById(
+                    "tarjetaAQI"
+                );
+
+
+            const semaforo =
+                document.getElementById(
+                    "semaforoAQI"
+                );
+
+
+            const categoria =
+                document.getElementById(
+                    "categoriaAQI"
+                );
+
+
+            const riesgo =
+                document.getElementById(
+                    "riesgoAQI"
+                );
+
+
+            tarjeta.style.backgroundColor =
+                clasificacion.color;
+
+
+            tarjeta.style.color =
+                clasificacion.colorTexto;
+
+
+            semaforo.style.backgroundColor =
+                clasificacion.color;
+
+
+            categoria.textContent =
+                clasificacion.categoria;
+
+
+            riesgo.textContent =
+                `${clasificacion.riesgo}. ${clasificacion.descripcion}`;
+
+        }
+
+
+
+        /* ==================================================
+           ACTUALIZAR INDICADORES
+           ================================================== */
+
+        function actualizarIndicadores(
+            ultimo
+        ) {
+
+            const aqi =
+                formatearNumero(
+                    ultimo.aqi,
+                    0
+                );
+
+
+            const pm25 =
+                formatearNumero(
+                    ultimo.pm25_avg,
+                    2
+                );
+
+
+            const pm10 =
+                formatearNumero(
+                    ultimo.pm10_avg,
+                    2
+                );
+
+
+            const temperatura =
+                formatearNumero(
+                    ultimo.temperature_avg,
+                    1
+                );
+
+
+            const humedad =
+                formatearNumero(
+                    ultimo.humidity_avg,
+                    1
+                );
+
+
+            const o3Ppm =
+                convertirO3APpm(
+                    ultimo.o3_avg
+                );
+
+
+            document
+                .getElementById(
+                    "aqi"
+                )
+                .textContent =
+
+                    aqi !== null
+                        ?
+                        aqi
+                        :
+                        "--";
+
+
+            document
+                .getElementById(
+                    "pm25"
+                )
+                .textContent =
+
+                    pm25 !== null
+                        ?
+                        `${pm25} µg/m³`
+                        :
+                        "--";
+
+
+            document
+                .getElementById(
+                    "pm10"
+                )
+                .textContent =
+
+                    pm10 !== null
+                        ?
+                        `${pm10} µg/m³`
+                        :
+                        "--";
+
+
+            document
+                .getElementById(
+                    "o3"
+                )
+                .textContent =
+
+                    o3Ppm !== null
+                        ?
+                        `${o3Ppm.toFixed(3)} ppm`
+                        :
+                        "--";
+
+
+            document
+                .getElementById(
+                    "temperatura"
+                )
+                .textContent =
+
+                    temperatura !== null
+                        ?
+                        `${temperatura} °C`
+                        :
+                        "--";
+
+
+            document
+                .getElementById(
+                    "humedad"
+                )
+                .textContent =
+
+                    humedad !== null
+                        ?
+                        `${humedad} %`
+                        :
+                        "--";
+
+
+            actualizarTarjetaAQI(
+                ultimo
+            );
+
+        }
+
+
+
+        /* ==================================================
+           CREAR O ACTUALIZAR GRÁFICA DE PARTÍCULAS
+           ================================================== */
+
+        function actualizarGraficaParticulas(
+            datos
+        ) {
+
+            const ordenados =
+                [...datos].sort(
+
+                    (a, b) =>
+
+                        Number(
+                            a.hour_timestamp_utc
+                        )
+                        -
+                        Number(
+                            b.hour_timestamp_utc
+                        )
+
+                );
+
+
+            const etiquetas =
+                ordenados.map(
+
+                    registro =>
+
+                        convertirFecha(
+                            registro.hour_timestamp_utc
+                        )
+
+                );
+
+
+            const valoresPM25 =
+                ordenados.map(
+
+                    registro => {
+
+                        const valor =
+                            Number(
+                                registro.pm25_avg
+                            );
+
+                        return Number.isFinite(
+                            valor
+                        )
+                            ?
+                            valor
+                            :
+                            null;
+
+                    }
+
+                );
+
+
+            const valoresPM10 =
+                ordenados.map(
+
+                    registro => {
+
+                        const valor =
+                            Number(
+                                registro.pm10_avg
+                            );
+
+                        return Number.isFinite(
+                            valor
+                        )
+                            ?
+                            valor
+                            :
+                            null;
+
+                    }
+
+                );
+
+
+            const canvas =
+                document.getElementById(
+                    "graficaParticulas"
+                );
+
+
+            if (
+                graficaParticulas
+            ) {
+
+                graficaParticulas.data.labels =
+                    etiquetas;
+
+
+                graficaParticulas
+                    .data
+                    .datasets[0]
+                    .data =
+                    valoresPM25;
+
+
+                graficaParticulas
+                    .data
+                    .datasets[1]
+                    .data =
+                    valoresPM10;
+
+
+                graficaParticulas.update();
+
+
+                return;
+
+            }
+
+
+            graficaParticulas =
+                new Chart(
+
+                    canvas.getContext(
+                        "2d"
+                    ),
+
+                    {
+
+                        type:
+                            "line",
+
+
+                        data: {
+
+                            labels:
+                                etiquetas,
+
+
+                            datasets: [
+
+                                {
+
+                                    label:
+                                        "PM2.5 (µg/m³)",
+
+                                    data:
+                                        valoresPM25,
+
+                                    borderColor:
+                                        "#2563eb",
+
+                                    backgroundColor:
+                                        "rgba(37, 99, 235, 0.10)",
+
+                                    borderWidth:
+                                        2,
+
+                                    pointRadius:
+                                        3,
+
+                                    pointHoverRadius:
+                                        6,
+
+                                    tension:
+                                        0.25,
+
+                                    spanGaps:
+                                        true,
+
+                                    fill:
+                                        false
+
+                                },
+
+
+                                {
+
+                                    label:
+                                        "PM10 (µg/m³)",
+
+                                    data:
+                                        valoresPM10,
+
+                                    borderColor:
+                                        "#f28c00",
+
+                                    backgroundColor:
+                                        "rgba(242, 140, 0, 0.10)",
+
+                                    borderWidth:
+                                        2,
+
+                                    pointRadius:
+                                        3,
+
+                                    pointHoverRadius:
+                                        6,
+
+                                    tension:
+                                        0.25,
+
+                                    spanGaps:
+                                        true,
+
+                                    fill:
+                                        false
+
+                                }
+
+                            ]
+
+                        },
+
+
+                        options: {
+
+                            responsive:
+                                true,
+
+                            maintainAspectRatio:
+                                false,
+
+                            interaction: {
+
+                                mode:
+                                    "index",
+
+                                intersect:
+                                    false
+
+                            },
+
+                            plugins: {
+
+                                legend: {
+
+                                    display:
+                                        true,
+
+                                    position:
+                                        "top"
+
+                                },
+
+                                tooltip: {
+
+                                    enabled:
+                                        true
+
+                                }
+
+                            },
+
+                            scales: {
+
+                                x: {
+
+                                    title: {
+
+                                        display:
+                                            true,
+
+                                        text:
+                                            "Fecha y hora"
+
+                                    }
+
+                                },
+
+                                y: {
+
+                                    beginAtZero:
+                                        true,
+
+                                    title: {
+
+                                        display:
+                                            true,
+
+                                        text:
+                                            "Concentración (µg/m³)"
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                );
+
+        }
+
+
+
+        /* ==================================================
+           CREAR O ACTUALIZAR GRÁFICA DE O3
+           ================================================== */
+
+        function actualizarGraficaO3(
+            datos
+        ) {
+
+            const ordenados =
+                [...datos].sort(
+
+                    (a, b) =>
+
+                        Number(
+                            a.hour_timestamp_utc
+                        )
+                        -
+                        Number(
+                            b.hour_timestamp_utc
+                        )
+
+                );
+
+
+            const etiquetas =
+                ordenados.map(
+
+                    registro =>
+
+                        convertirFecha(
+                            registro.hour_timestamp_utc
+                        )
+
+                );
+
+
+            const valoresO3 =
+                ordenados.map(
+
+                    registro =>
+
+                        convertirO3APpm(
+                            registro.o3_avg
+                        )
+
+                );
+
+
+            const canvas =
+                document.getElementById(
+                    "graficaO3"
+                );
+
+
+            if (
+                graficaO3
+            ) {
+
+                graficaO3.data.labels =
+                    etiquetas;
+
+
+                graficaO3
+                    .data
+                    .datasets[0]
+                    .data =
+                    valoresO3;
+
+
+                graficaO3.update();
+
+
+                return;
+
+            }
+
+
+            graficaO3 =
+                new Chart(
+
+                    canvas.getContext(
+                        "2d"
+                    ),
+
+                    {
+
+                        type:
+                            "line",
+
+
+                        data: {
+
+                            labels:
+                                etiquetas,
+
+
+                            datasets: [
+
+                                {
+
+                                    label:
+                                        "O₃ (ppm)",
+
+                                    data:
+                                        valoresO3,
+
+                                    borderColor:
+                                        "#8f3f97",
+
+                                    backgroundColor:
+                                        "rgba(143, 63, 151, 0.12)",
+
+                                    borderWidth:
+                                        2,
+
+                                    pointRadius:
+                                        3,
+
+                                    pointHoverRadius:
+                                        6,
+
+                                    tension:
+                                        0.25,
+
+                                    spanGaps:
+                                        true,
+
+                                    fill:
+                                        true
+
+                                }
+
+                            ]
+
+                        },
+
+
+                        options: {
+
+                            responsive:
+                                true,
+
+                            maintainAspectRatio:
+                                false,
+
+                            interaction: {
+
+                                mode:
+                                    "index",
+
+                                intersect:
+                                    false
+
+                            },
+
+                            plugins: {
+
+                                legend: {
+
+                                    display:
+                                        true,
+
+                                    position:
+                                        "top"
+
+                                },
+
+                                tooltip: {
+
+                                    callbacks: {
+
+                                        label:
+                                            function (
+                                                contexto
+                                            ) {
+
+                                                const valor =
+                                                    contexto
+                                                        .parsed
+                                                        .y;
+
+
+                                                if (
+                                                    valor === null
+                                                    ||
+                                                    valor === undefined
+                                                ) {
+
+                                                    return "O₃: sin información";
+
+                                                }
+
+
+                                                return (
+                                                    "O₃: "
+                                                    +
+                                                    valor.toFixed(
+                                                        3
+                                                    )
+                                                    +
+                                                    " ppm"
+                                                );
+
+                                            }
+
+                                    }
+
+                                }
+
+                            },
+
+                            scales: {
+
+                                x: {
+
+                                    title: {
+
+                                        display:
+                                            true,
+
+                                        text:
+                                            "Fecha y hora"
+
+                                    }
+
+                                },
+
+                                y: {
+
+                                    beginAtZero:
+                                        true,
+
+                                    title: {
+
+                                        display:
+                                            true,
+
+                                        text:
+                                            "O₃ (ppm)"
+
+                                    },
+
+                                    ticks: {
+
+                                        callback:
+                                            function (
+                                                valor
+                                            ) {
+
+                                                return Number(
+                                                    valor
+                                                ).toFixed(
+                                                    3
+                                                );
+
+                                            }
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                );
+
+        }
+
+
+
+        /* ==================================================
+           CARGAR DASHBOARD
+           ================================================== */
+
+        async function cargarDashboard() {
+
+            try {
+
+                ocultarError();
+
+
+                console.log(
+                    "Iniciando actualización del dashboard..."
+                );
+
+
+                const datos =
+                    await obtenerDatos();
+
+
+                console.log(
+                    "Número de registros recibidos:",
+                    datos.length
+                );
+
+
+                /*
+                Obtener el registro que tenga el
+                timestamp más reciente.
+                */
+
+                const ultimo =
+                    datos.reduce(
+
+                        (a, b) =>
+
+                            Number(
+                                a.hour_timestamp_utc
+                            )
+                            >
+                            Number(
+                                b.hour_timestamp_utc
+                            )
+
+                                ?
+                                a
+                                :
+                                b
+
+                    );
+
+
+                console.log(
+                    "Registro más reciente:",
+                    ultimo
+                );
+
+
+                actualizarIndicadores(
+                    ultimo
+                );
+
+
+                actualizarGraficaParticulas(
+                    datos
+                );
+
+
+                actualizarGraficaO3(
+                    datos
+                );
+
+
+                actualizarEstadoConexion(
+                    "conectado",
+                    "Datos en línea"
+                );
+
+
+                const fechaActualizacion =
+                    convertirFecha(
+                        ultimo.hour_timestamp_utc
+                    );
+
+
+                document
+                    .getElementById(
+                        "ultimaActualizacion"
+                    )
+                    .textContent =
+                    `· Último registro: ${fechaActualizacion}`;
+
+
+                console.log(
+                    "Dashboard actualizado correctamente."
+                );
+
+            }
+            catch (
+                error
+            ) {
+
+                console.error(
+                    "No fue posible cargar el dashboard:",
+                    error
+                );
+
+
+                actualizarEstadoConexion(
+                    "error",
+                    "Error de conexión"
+                );
+
+
+                mostrarError(
+                    "No fue posible obtener los datos de la estación. "
+                    +
+                    error.message
+                    +
+                    " Abre F12 → Console para revisar el detalle."
+                );
+
+
+                document
+                    .getElementById(
+                        "riesgoAQI"
+                    )
+                    .textContent =
+                    "No fue posible actualizar los datos.";
+
+            }
+
+        }
+
+
+
+        /* ==================================================
+           INICIAR CUANDO TERMINE DE CARGAR EL HTML
+           ================================================== */
+
+        document.addEventListener(
+
+            "DOMContentLoaded",
+
+            function () {
+
+                /*
+                Primera consulta.
+                */
+
+                cargarDashboard();
+
+
+                /*
+                Consultas posteriores automáticas.
+                */
+
+                setInterval(
+
+                    cargarDashboard,
+
+                    INTERVALO_ACTUALIZACION
+
+                );
+
+            }
+
+        );
+
+    </script>
+
+
+</body>
+
+</html>
